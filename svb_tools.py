@@ -19,6 +19,11 @@ def get_ssh(state_file, tt):
         eta = nbl.variables['Eta'][tt,:,:]
     return(eta)
 
+def get_snapshot_at_level(state_file, tt, zz, var):
+    with Dataset(state_file, 'r') as nbl:
+        T = nbl.variables[var][tt,zz,:,:]
+    return(T)
+
 def unstagger(ugrid, vgrid):
     """ Interpolate u and v component values to values at grid cell centres (from D.Latornell for NEMO output).
     The shapes of the returned arrays are 1 less than those of
@@ -70,7 +75,7 @@ def plot_level_vars(state_file, lon, lat, mask, time_indexes, zz=0, umin=-5,umax
         ax0.set_aspect(1)
         ax2.set_aspect(1)
         ax3.set_aspect(1)
-        
+
 
 def plot_merid_CS(statefile,tt,lon_ind,var, cb_label, Tcmap, Tmin, Tmax, mask,ylim1=27.0, ylim2=34.1):
     '''tt: time index
@@ -97,10 +102,10 @@ def plot_merid_CS(statefile,tt,lon_ind,var, cb_label, Tcmap, Tmin, Tmax, mask,yl
 
     pc = ax1.pcolormesh(lat,Z,T1[:,:len(lat)],cmap=Tcmap, vmin=Tmin, vmax=Tmax)
     cn = ax1.contour(lat,Z,T1[:,:len(lat)],levels=np.linspace(Tmin,Tmax,15), colors='k')
-   
+
     norm = mpl.colors.Normalize(vmin=Tmin, vmax=Tmax)
     cbar_ax = fig.add_axes([0.89, 0.125, 0.022, 0.755])
-    cb = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=Tcmap),cax=cbar_ax, 
+    cb = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=Tcmap),cax=cbar_ax,
                       orientation='vertical', label=cb_label,
                       format='%1.2f')
     ax1.set_xlabel('Lat')
@@ -134,14 +139,13 @@ def plot_zonal_CS(state_file,lon,lat,Z,tt,lat_ind,var, cb_label, Tcmap, Tmin, Tm
 
     pc = ax1.contourf(lon,Z,T1[:,:len(lon)],30,cmap=Tcmap, vmin=Tmin, vmax=Tmax)
     cn = ax1.contour(lon,Z,T1[:,:len(lon)],levels=[0], colors='k')
-   
+
     norm = mpl.colors.Normalize(vmin=Tmin, vmax=Tmax)
     cbar_ax = fig.add_axes([0.89, 0.125, 0.022, 0.755])
-    cb = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=Tcmap),cax=cbar_ax, 
+    cb = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=Tcmap),cax=cbar_ax,
                       orientation='vertical', label=cb_label)
     ax1.set_xlabel('Lon')
     ax1.set_ylabel('Depth / m')
     ax1.set_ylim(-1000,0)
     ax1.set_xlim(xlim1,xlim2)
     ax1.set_title(r'%1.1f$^{\circ}$ lat, t=%1.1f hrs' %(lat[lat_ind], time[tt]/3600))
-
