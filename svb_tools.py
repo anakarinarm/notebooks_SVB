@@ -75,6 +75,7 @@ def plot_level_vars(state_file, lon, lat, mask, time_indexes, zz=0, umin=-5,umax
         ax0.set_aspect(1)
         ax2.set_aspect(1)
         ax3.set_aspect(1)
+    return(ax0,ax2,ax3)
 
 
 def plot_merid_CS(statefile,tt,lon_ind,var, cb_label, Tcmap, Tmin, Tmax, mask,ylim1=27.0, ylim2=34.1):
@@ -113,6 +114,7 @@ def plot_merid_CS(statefile,tt,lon_ind,var, cb_label, Tcmap, Tmin, Tmax, mask,yl
     ax1.set_ylim(-200,0)
     ax1.set_xlim(27.8,29.5)
     ax1.text(27.8,5,'%1.1f$^{\circ}$ lon, t=%1.1f hrs' %(lon[lon_ind], time[tt]/3600), fontweight='bold', fontsize=13)
+    return(ax1)
 
 def plot_zonal_CS(state_file,lon,lat,Z,tt,lat_ind,var, cb_label, Tcmap, Tmin, Tmax, mask,xlim1=-119+360, xlim2=-114+360):
     '''tt: time index
@@ -130,7 +132,7 @@ def plot_zonal_CS(state_file,lon,lat,Z,tt,lat_ind,var, cb_label, Tcmap, Tmin, Tm
         T1 = np.ma.masked_array(T,mask=mask_exp)
         time = nbl.variables['T'][:]
 
-    # meridional cross-section
+    # zonal cross-section
     fig = plt.figure(figsize=(5,5))
     gs = GridSpec(1,1, width_ratios=[1], wspace=0.02)
     ax1 = fig.add_subplot(gs[0])
@@ -149,3 +151,40 @@ def plot_zonal_CS(state_file,lon,lat,Z,tt,lat_ind,var, cb_label, Tcmap, Tmin, Tm
     ax1.set_ylim(-1000,0)
     ax1.set_xlim(xlim1,xlim2)
     ax1.set_title(r'%1.1f$^{\circ}$ lat, t=%1.1f hrs' %(lat[lat_ind], time[tt]/3600))
+    return(ax1)
+
+def plot_zonal_CS_pcol(state_file,lon,lat,Z,tt,lat_ind,var, cb_label, Tcmap, Tmin, Tmax, mask,xlim1=-119+360, xlim2=-114+360):
+    '''tt: time index
+       lat_ind: latitude index
+       var: str, variable name to plot
+       cb_label: str, colorbar label
+       Tcmap: cmo colormap
+       Tmin: float, lower limit colormap
+       Tmax: float, upper limit colormap
+       mask: 3D array, land mask for variable var.
+       '''
+    with Dataset(state_file, 'r') as nbl:
+        T = nbl.variables[var][tt,:,lat_ind,:]
+        mask_exp = np.expand_dims(mask[:,lat_ind,:],0) + np.zeros_like(T)
+        T1 = np.ma.masked_array(T,mask=mask_exp)
+        time = nbl.variables['T'][:]
+
+    # zonal cross-section
+    fig = plt.figure(figsize=(5,5))
+    gs = GridSpec(1,1, width_ratios=[1], wspace=0.02)
+    ax1 = fig.add_subplot(gs[0])
+
+    ax1.set_facecolor('tan')
+
+    pc = ax1.pcolormesh(lon,Z,T1[:,:len(lon)],cmap=Tcmap, vmin=Tmin, vmax=Tmax)
+
+    norm = mpl.colors.Normalize(vmin=Tmin, vmax=Tmax)
+    cbar_ax = fig.add_axes([0.89, 0.125, 0.022, 0.755])
+    cb = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=Tcmap),cax=cbar_ax,
+                      orientation='vertical', label=cb_label)
+    ax1.set_xlabel('Lon')
+    ax1.set_ylabel('Depth / m')
+    ax1.set_ylim(-1000,0)
+    ax1.set_xlim(xlim1,xlim2)
+    ax1.set_title(r'%1.1f$^{\circ}$ lat, t=%1.1f hrs' %(lat[lat_ind], time[tt]/3600))
+    return(ax1)
