@@ -7,16 +7,16 @@ from matplotlib.gridspec import GridSpec
 from matplotlib.gridspec import GridSpecFromSubplotSpec
 
 
-def get_snapshot(state_file, tt, zz):
+def get_snapshot(state_file, tt, zz, variables=['Temp', 'U', 'V'] ):
     with Dataset(state_file, 'r') as nbl:
-        T = nbl.variables['Temp'][tt,zz,:,:]
-        U = nbl.variables['U'][tt,zz,:,:]
-        V = nbl.variables['V'][tt,zz,:,:]
+        T = nbl.variables[variables[0]][tt,zz,:,:]
+        U = nbl.variables[variables[1]][tt,zz,:,:]
+        V = nbl.variables[variables[2]][tt,zz,:,:]
     return(T,U,V)
 
-def get_ssh(state_file, tt):
+def get_ssh(state_file, tt, var='Eta'):
     with Dataset(state_file, 'r') as nbl:
-        eta = nbl.variables['Eta'][tt,:,:]
+        eta = nbl.variables[var][tt,:,:]
     return(eta)
 
 def get_snapshot_at_level(state_file, tt, zz, var):
@@ -39,20 +39,59 @@ def unstagger(ugrid, vgrid):
     v = np.add(vgrid[..., :-1, :], vgrid[..., 1:, :]) / 2
     return u, v
 
-def plot_level_vars(state_file, lon, lat, mask, time_indexes, zz=0, umin=-5,umax=5):
+def plot_level_vars(state_file, lon, lat, mask, time_indexes, zz=0, umin=-5,umax=5, variables=['Temp', 'U', 'V'], var='Eta'):
     with Dataset(state_file, 'r') as nbl:
         time = nbl.variables['T'][:]
 
     for tt, ti in zip(time_indexes, time[time_indexes]):
-        T,U,V = get_snapshot(state_file, tt, zz)
-        eta = get_ssh(state_file, tt)
+        T,U,V = get_snapshot(state_file, tt, zz, variables=variables)
+#        eta = get_ssh(state_file, tt, var=var)
 
         fig, (ax0,ax2,ax3) = plt.subplots(1,3,figsize=(14,5), sharey=True)
         ax0.set_facecolor('tan')
         ax2.set_facecolor('tan')
         ax3.set_facecolor('tan')
 
-        pc = ax0.contourf(lon,lat, np.ma.masked_array(eta*1E2,mask=mask[zz,:,:]),20,
+#        pc = ax0.contourf(lon,lat, np.ma.masked_array(eta*1E2,mask=mask[zz,:,:]),20,
+#                          cmap=cmo.cm.delta, vmin=-1, vmax=1)
+#        cb = plt.colorbar(pc, ax=ax0)
+
+        pc3 = ax2.contourf(lon,lat, np.ma.masked_array(U[:,:-1]*1E2,mask=mask[zz,:,:]),20,
+                           cmap=cmo.cm.balance, vmin=umin, vmax=umax)
+        cb3 = plt.colorbar(pc3, ax=ax2)
+
+        pc4 = ax3.contourf(lon,lat, np.ma.masked_array(V[:-1,:]*1E2,mask=mask[zz,:,:]),20,
+                           cmap=cmo.cm.balance, vmin=umin, vmax=umax)
+        cb4 = plt.colorbar(pc4, ax=ax3)
+
+        ax0.set_xlabel('lon')
+        ax2.set_xlabel('lon')
+        ax3.set_xlabel('lon')
+        ax0.set_ylabel('lat')
+
+        ax0.set_title('ssh (cm) at %1.1f h'%(ti/3600))
+        ax2.set_title('U (cm s$^{-1}$) at %1.1f h'%(ti/3600))
+        ax3.set_title('V (cm s$^{-1}$) at %1.1f h'%(ti/3600))
+        ax0.set_aspect(1)
+        ax2.set_aspect(1)
+        ax3.set_aspect(1)
+    return(ax0,ax2,ax3)
+
+def plot_level_vars_diag(state_file, eta_file, lon, lat, mask, time_indexes, zz=0, umin=-5,umax=5, variables=['Temp', 'U', 'V'], var='Eta'):
+    with Dataset(state_file, 'r') as nbl:
+        time = nbl.variables['T'][:]
+
+    for tt, ti in zip(time_indexes, time[time_indexes]):
+        T,U,V = get_snapshot(state_file, tt, zz, variables=variables)
+        eta = get_ssh(eta_file, tt, var=var)
+
+        fig, (ax0,ax2,ax3) = plt.subplots(1,3,figsize=(14,5), sharey=True)
+        ax0.set_facecolor('tan')
+        ax2.set_facecolor('tan')
+        ax3.set_facecolor('tan')
+        
+        eta_level = np.squeeze(np.ma.masked_array(eta*1E2,mask=mask[zz,:,:]))
+        pc = ax0.contourf(lon,lat, eta_level ,20,
                           cmap=cmo.cm.delta, vmin=-1, vmax=1)
         cb = plt.colorbar(pc, ax=ax0)
 
@@ -78,7 +117,7 @@ def plot_level_vars(state_file, lon, lat, mask, time_indexes, zz=0, umin=-5,umax
     return(ax0,ax2,ax3)
 
 
-def plot_merid_CS(statefile,tt,lon_ind,var, cb_label, Tcmap, Tmin, Tmax, mask,ylim1=27.0, ylim2=34.1):
+def plot_merid_CS(statefile,tt,lon_ind,var, cb_label, Tcmap, Tmin, Tmax, mask,Zind=np.arange(100),ylim1=27.0, ylim2=34.1):
     '''tt: time index
        lon_ind: longitude index
        var: str, variable name to plot
@@ -90,7 +129,7 @@ def plot_merid_CS(statefile,tt,lon_ind,var, cb_label, Tcmap, Tmin, Tmax, mask,yl
        '''
     with Dataset(state_file, 'r') as nbl:
         T = nbl.variables[var][tt,:,:,lon_ind]
-        mask_exp = np.expand_dims(mask[:,:,lon_ind],0) + np.zeros_like(T)
+        mask_exp = np.expand_dims(mask[Zind,lon_ind],0) + np.zeros_like(T)
         T1 = np.ma.masked_array(T,mask=mask_exp)
         time = nbl.variables['T'][:]
 
@@ -116,7 +155,7 @@ def plot_merid_CS(statefile,tt,lon_ind,var, cb_label, Tcmap, Tmin, Tmax, mask,yl
     ax1.text(27.8,5,'%1.1f$^{\circ}$ lon, t=%1.1f hrs' %(lon[lon_ind], time[tt]/3600), fontweight='bold', fontsize=13)
     return(ax1)
 
-def plot_zonal_CS(state_file,lon,lat,Z,tt,lat_ind,var, cb_label, Tcmap, Tmin, Tmax, mask,xlim1=-119+360, xlim2=-114+360):
+def plot_zonal_CS(state_file,lon,lat,Z,tt,lat_ind,var, cb_label, Tcmap, Tmin, Tmax, mask,Zind=np.arange(100),xlim1=-119+360, xlim2=-114+360):
     '''tt: time index
        lat_ind: latitude index
        var: str, variable name to plot
@@ -128,7 +167,7 @@ def plot_zonal_CS(state_file,lon,lat,Z,tt,lat_ind,var, cb_label, Tcmap, Tmin, Tm
        '''
     with Dataset(state_file, 'r') as nbl:
         T = nbl.variables[var][tt,:,lat_ind,:]
-        mask_exp = np.expand_dims(mask[:,lat_ind,:],0) + np.zeros_like(T)
+        mask_exp = np.expand_dims(mask[Zind,lat_ind,:],0) + np.zeros_like(T)
         T1 = np.ma.masked_array(T,mask=mask_exp)
         time = nbl.variables['T'][:]
 
@@ -153,7 +192,8 @@ def plot_zonal_CS(state_file,lon,lat,Z,tt,lat_ind,var, cb_label, Tcmap, Tmin, Tm
     ax1.set_title(r'%1.1f$^{\circ}$ lat, t=%1.1f hrs' %(lat[lat_ind], time[tt]/3600))
     return(ax1)
 
-def plot_zonal_CS_pcol(state_file,lon,lat,Z,tt,lat_ind,var, cb_label, Tcmap, Tmin, Tmax, mask,xlim1=-119+360, xlim2=-114+360):
+def plot_zonal_CS_pcol(state_file,lon,lat,Z,tt,lat_ind,var, cb_label, Tcmap, Tmin, Tmax, mask,
+                       Zind=np.arange(100),xlim1=-119+360, xlim2=-114+360):
     '''tt: time index
        lat_ind: latitude index
        var: str, variable name to plot
@@ -165,7 +205,7 @@ def plot_zonal_CS_pcol(state_file,lon,lat,Z,tt,lat_ind,var, cb_label, Tcmap, Tmi
        '''
     with Dataset(state_file, 'r') as nbl:
         T = nbl.variables[var][tt,:,lat_ind,:]
-        mask_exp = np.expand_dims(mask[:,lat_ind,:],0) + np.zeros_like(T)
+        mask_exp = np.expand_dims(mask[Zind,lat_ind,:],0) + np.zeros_like(T)
         T1 = np.ma.masked_array(T,mask=mask_exp)
         time = nbl.variables['T'][:]
 
