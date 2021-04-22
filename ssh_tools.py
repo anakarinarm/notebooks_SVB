@@ -153,3 +153,30 @@ def butter_highpass_filter(data, highcut, fs, order=5):
     b, a = butter_highpass(highcut, fs, order=order)
     y = filtfilt(b, a, data)
     return y
+
+def filter_freq(time, data, f):
+    '''filter a particular frequency (f) from a timeseries (data). 
+    As in harmonic analysis chapter 5.5 from Data Analysis Methods in 
+    Physical Oceanography and amatlab snippet from Gonzalo
+    
+    Input:
+    time, data are 1D arrays 
+    f is a scalar
+    
+    Output:
+    Yr: 1D array residual timeseries (Yr = data - Yh)
+    Yh: 1D array with harmonic
+    '''
+    ine_freq = f
+    x0 = np.ones_like(time)
+    x1 = np.cos(2*np.pi*ine_freq*time)
+    x2 = np.sin(2*np.pi*ine_freq*time)
+    Yh = np.zeros_like(time)
+    X = np.array([x0, x1, x2]) 
+
+    D = np.matmul(X,np.transpose(X))
+    Y = np.matmul(X,np.transpose(data-np.mean(data)))
+    B = np.matmul(np.linalg.inv(D),Y), # regression coefficients.
+    Yh = B[0][0] + B[0][1]*x1 + B[0][2]*x2
+    Yr = data - Yh # Resiudual
+    return Yr, Yh
