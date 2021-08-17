@@ -8,6 +8,8 @@ MITgcm/coarse/
 # Data files #
 *.bin
 *.dat
+*.pkl
+*.nc
 
 # Animations and figures #
 *.mp4
