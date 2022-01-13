@@ -81,8 +81,8 @@ def create_nc_file(x_array, y_array, p1_psd, p2_psd, p3_psd, p1_freq, p2_freq, p
 
     dataset.close()
     
-outdir = '/data/SO2/sio-kramosmusalem/exp06_512x612x100_ORL_SVB/01_SVB_febTS_output/'
-outdir2 = '/data/SO2/sio-kramosmusalem/exp06_512x612x100_ORL/01_noSVB_febTS/'
+outdir = '/data/SO2/sio-kramosmusalem/exp06_512x612x100_ORL_SVB/02_SVB_barotropic_output/'
+outdir2 = '/data/SO2/sio-kramosmusalem/exp06_512x612x100_ORL/02_noSVB_barotropic/'
 
 ds = open_mdsdataset(outdir, prefix=['eta'])
 ds2 = open_mdsdataset(outdir2, prefix=['eta'])
@@ -152,9 +152,9 @@ for ii in range(nx): #nx
             phase_p3[jj,ii] = signalPhase[np.argmax(signalPSD[47:59])+47]
             
 
-filename = 'ssh_spectra_phase_3peaks_febTS_cm.nc'
-description = 'This file contains the fft, frequency and phase of the 3 peaks in SSH spectra (Bay-No Bay FebTS) at around 5.2 cpd, 7.6 cpd and 11.7 cpd on the whole domain.'
-title = 'SSH max PSD , frequency and phase of main peaks SVB-no SVB for FebTS runs'
+filename = 'ssh_spectra_phase_3peaks_barotropic_cm.nc'
+description = 'This file contains the fft, frequency and phase of the 3 peaks in SSH spectra (Bay-No Bay barotropic) at around 5.2 cpd, 7.6 cpd and 11.7 cpd on the whole domain.'
+title = 'SSH max PSD , frequency and phase of main peaks SVB-no SVB for barotropic runs'
 
 create_nc_file(lon[:], lat[:], psd_p1, psd_p2, psd_p3, freq_p1, freq_p2, freq_p3, phase_p1, 
                phase_p2, phase_p3, filename, title, description)
