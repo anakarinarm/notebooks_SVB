@@ -10,7 +10,7 @@ MITgcm/coarse/
 *.dat
 *.pkl
 *.nc
-
+*.npz
 # Animations and figures #
 *.mp4
 *.png
