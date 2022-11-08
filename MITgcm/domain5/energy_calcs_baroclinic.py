@@ -111,28 +111,28 @@ end = 720
 rho0 = np.nanmean(ds3.rhoRef.data)
 g = 9.81
 
-# Initialize arrays to save EP time series
-Ep = np.zeros_like(time[:end])
-Epsvbmask = np.zeros_like(time[:end])
-EpSVB = np.zeros_like(time[:end])
-EpnoSVB = np.zeros_like(time[:end])
+# # Initialize arrays to save EP time series
+# Ep = np.zeros_like(time[:end])
+# Epsvbmask = np.zeros_like(time[:end])
+# EpSVB = np.zeros_like(time[:end])
+# EpnoSVB = np.zeros_like(time[:end])
 
-# grid variables
-dA = ds.rA.data
-dAnS = ds2.rA.data
+# # grid variables
+# dA = ds.rA.data
+# dAnS = ds2.rA.data
 
-for tt in range(len(time[:end])):
-    ETASVB = np.ma.masked_array(ds.ETAN.data[tt,...], mask=maskSVB[0,...])
-    ETAnoSVB = np.ma.masked_array(ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
-    ETAanom = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
-    ETAanom_svb = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=maskSVB[0,...])
+# for tt in range(len(time[:end])):
+#     ETASVB = np.ma.masked_array(ds.ETAN.data[tt,...], mask=maskSVB[0,...])
+#     ETAnoSVB = np.ma.masked_array(ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
+#     ETAanom = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
+#     ETAanom_svb = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=maskSVB[0,...])
    
-    EpSVB[tt]     = 0.5 * rho0 * g * np.nansum(ETASVB**2 * dA)
-    EpnoSVB[tt]   = 0.5 * rho0 * g * np.nansum(ETAnoSVB**2 * dAnS)
-    Ep[tt]        = 0.5 * rho0 * g * np.nansum(ETAanom**2 * dAnS)
-    Epsvbmask[tt] = 0.5 * rho0 * g * np.nansum(ETAanom_svb**2 * dA)
+#     EpSVB[tt]     = 0.5 * rho0 * g * np.nansum(ETASVB**2 * dA)
+#     EpnoSVB[tt]   = 0.5 * rho0 * g * np.nansum(ETAnoSVB**2 * dAnS)
+#     Ep[tt]        = 0.5 * rho0 * g * np.nansum(ETAanom**2 * dAnS)
+#     Epsvbmask[tt] = 0.5 * rho0 * g * np.nansum(ETAanom_svb**2 * dA)
 
-np.savez('PE_febTS', EpSVB=EpSVB, EpnoSVB=EpnoSVB, Ep=Ep, Epsvbmask=Epsvbmask) 
+# np.savez('PE_febTS', EpSVB=EpSVB, EpnoSVB=EpnoSVB, Ep=Ep, Epsvbmask=Epsvbmask) 
 
 
 
@@ -144,8 +144,6 @@ np.savez('PE_febTS', EpSVB=EpSVB, EpnoSVB=EpnoSVB, Ep=Ep, Epsvbmask=Epsvbmask)
 # 
 # where $(\rho-\rho_0)=\rho_{Anoma}$ in MITgcm output.
 # 
-# What is the correct way to do this integral numerically?
-
 
 g = 9.81
 APE = np.zeros_like(time[:end])
@@ -165,22 +163,22 @@ for tt in range(len(time[:end])):
     etan = np.expand_dims(np.ma.masked_array(ds2.ETAN.data[tt,...], mask=masknoSVB[0,...]),0) + np.zeros((nz,ny,nx))
     rhoAnomnoSVB = np.ma.masked_array(ds4.RHOAnoma[tt,...].data, mask=masknoSVB)
     vol2 = dAnS * (drF+etan) * hFacC 
+   
+    etan = np.expand_dims(np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=masknoSVB[0,...]),0) + np.zeros((nz,ny,nx))
+    rhoAnomonlySVB = np.ma.masked_array(ds3.RHOAnoma[tt,...].data-ds4.RHOAnoma[tt,...].data, mask=masknoSVB)
+    vol3 = dAnS * (drF+etan) * hFacC 
     
-    #ETAnoSVB = np.ma.masked_array(ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
-    #vol2 = dA_nobay*(ETAnoSVB)
-    
-    #ETAanom = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
-    #vol3 = dA_nobay*(ETAanom)
-    
-    #ETAanom_svb = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=maskSVB[0,...])
-    #vol4 = dA_bay*(ETAanom_svb)
+    etan = np.expand_dims(np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=maskSVB[0,...]),0) + np.zeros((nz,ny,nx))
+    rhoAnomonlySVB_maskSVB = np.ma.masked_array(ds3.RHOAnoma[tt,...].data-ds4.RHOAnoma[tt,...].data, mask=maskSVB)
+    vol4 = dA * (drF+etan) * hFacCSVB  
+   
    
     APESVB[tt] = g*np.nansum(vol1*rhoAnomSVB*Zexp)
     APEnoSVB[tt] = g*np.nansum(vol2*rhoAnomnoSVB*Zexp)
-    #Ep[tt] = rhoref*g*np.nansum(vol3*ETAanom)
-    #Ep_svbmask[tt] = rhoref*g*np.nansum(vol4*ETAanom_svb)
-
-np.savez('APE_febTS', APESVB=APESVB, APEnoSVB=APEnoSVB, APE=APE, APEsvbmask= APEsvbmask) 
+    APE[tt] = g*np.nansum(vol3*rhoAnomonlySVB*Zexp)
+    APEsvbmask[tt] = g*np.nansum(vol4*rhoAnomonlySVB_maskSVB*Zexp)
+   
+np.savez('APE_febTS', APESVB=APESVB, APEnoSVB=APEnoSVB, APE=APE, APEsvbmask=APEsvbmask) 
 
 
 

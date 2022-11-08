@@ -95,28 +95,28 @@ end = 720
 rho0 = np.nanmean(ds.rhoRef.data)
 g = 9.81
 
-# Initialize arrays to save EP time series
-Ep = np.zeros_like(time[:end])
-Epsvbmask = np.zeros_like(time[:end])
-EpSVB = np.zeros_like(time[:end])
-EpnoSVB = np.zeros_like(time[:end])
+# # Initialize arrays to save EP time series
+# Ep = np.zeros_like(time[:end])
+# Epsvbmask = np.zeros_like(time[:end])
+# EpSVB = np.zeros_like(time[:end])
+# EpnoSVB = np.zeros_like(time[:end])
 
-# grid variables
-dA = ds.rA.data
-dAnS = ds2.rA.data
+# # grid variables
+# dA = ds.rA.data
+# dAnS = ds2.rA.data
 
-for tt in range(len(time[:end])):
-    ETASVB = np.ma.masked_array(ds.ETAN.data[tt,...], mask=maskSVB[0,...])
-    ETAnoSVB = np.ma.masked_array(ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
-    ETAanom = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
-    ETAanom_svb = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=maskSVB[0,...])
+# for tt in range(len(time[:end])):
+#     ETASVB = np.ma.masked_array(ds.ETAN.data[tt,...], mask=maskSVB[0,...])
+#     ETAnoSVB = np.ma.masked_array(ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
+#     ETAanom = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
+#     ETAanom_svb = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=maskSVB[0,...])
    
-    EpSVB[tt]     = 0.5 * rho0 * g * np.nansum(ETASVB**2 * dA)
-    EpnoSVB[tt]   = 0.5 * rho0 * g * np.nansum(ETAnoSVB**2 * dAnS)
-    Ep[tt]        = 0.5 * rho0 * g * np.nansum(ETAanom**2 * dAnS)
-    Epsvbmask[tt] = 0.5 * rho0 * g * np.nansum(ETAanom_svb**2 * dA)
+#     EpSVB[tt]     = 0.5 * rho0 * g * np.nansum(ETASVB**2 * dA)
+#     EpnoSVB[tt]   = 0.5 * rho0 * g * np.nansum(ETAnoSVB**2 * dAnS)
+#     Ep[tt]        = 0.5 * rho0 * g * np.nansum(ETAanom**2 * dAnS)
+#     Epsvbmask[tt] = 0.5 * rho0 * g * np.nansum(ETAanom_svb**2 * dA)
 
-np.savez('PE_barotropic', EpSVB=EpSVB, EpnoSVB=EpnoSVB, Ep=Ep, Epsvbmask=Epsvbmask ) 
+# np.savez('PE_barotropic', EpSVB=EpSVB, EpnoSVB=EpnoSVB, Ep=Ep, Epsvbmask=Epsvbmask ) 
 
 # ### Kinetic energy
 # 
@@ -125,8 +125,6 @@ np.savez('PE_barotropic', EpSVB=EpSVB, EpnoSVB=EpnoSVB, Ep=Ep, Epsvbmask=Epsvbma
 # where $\rho=\rho(x,y,z,t)=\rho_{anoma}(x,y,z,t)+\rho_{ref}(z)$ from model output, but for this barotropic run $\rho=\rho_0$
 # 
 
-# time index up to which we calculate KE
-end = 144
 # intialize arrays to save KE time series
 K = np.zeros_like(time[:end])
 K_svbmask = np.zeros_like(time[:end])
