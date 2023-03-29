@@ -96,27 +96,27 @@ rho0 = np.nanmean(ds.rhoRef.data)
 g = 9.81
 
 # # Initialize arrays to save EP time series
-# Ep = np.zeros_like(time[:end])
-# Epsvbmask = np.zeros_like(time[:end])
-# EpSVB = np.zeros_like(time[:end])
-# EpnoSVB = np.zeros_like(time[:end])
+Ep = np.zeros_like(time[:end])
+Epsvbmask = np.zeros_like(time[:end])
+EpSVB = np.zeros_like(time[:end])
+EpnoSVB = np.zeros_like(time[:end])
 
-# # grid variables
-# dA = ds.rA.data
-# dAnS = ds2.rA.data
+# grid variables
+dA = ds.rA.data
+dAnS = ds2.rA.data
 
-# for tt in range(len(time[:end])):
-#     ETASVB = np.ma.masked_array(ds.ETAN.data[tt,...], mask=maskSVB[0,...])
-#     ETAnoSVB = np.ma.masked_array(ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
-#     ETAanom = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
-#     ETAanom_svb = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=maskSVB[0,...])
+for tt in range(len(time[:end])):
+    ETASVB = np.ma.masked_array(ds.ETAN.data[tt,...], mask=maskSVB[0,...])
+    ETAnoSVB = np.ma.masked_array(ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
+    ETAanom = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
+    ETAanom_svb = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=maskSVB[0,...])
    
-#     EpSVB[tt]     = 0.5 * rho0 * g * np.nansum(ETASVB**2 * dA)
-#     EpnoSVB[tt]   = 0.5 * rho0 * g * np.nansum(ETAnoSVB**2 * dAnS)
-#     Ep[tt]        = 0.5 * rho0 * g * np.nansum(ETAanom**2 * dAnS)
-#     Epsvbmask[tt] = 0.5 * rho0 * g * np.nansum(ETAanom_svb**2 * dA)
+    EpSVB[tt]     = 0.5 * rho0 * g * np.nansum(ETASVB * dA) # I had ETA**2 for some weird reason
+    EpnoSVB[tt]   = 0.5 * rho0 * g * np.nansum(ETAnoSVB * dAnS)
+    Ep[tt]        = 0.5 * rho0 * g * np.nansum(ETAanom * dAnS)
+    Epsvbmask[tt] = 0.5 * rho0 * g * np.nansum(ETAanom_svb * dA)
 
-# np.savez('PE_barotropic', EpSVB=EpSVB, EpnoSVB=EpnoSVB, Ep=Ep, Epsvbmask=Epsvbmask ) 
+np.savez('PE_barotropic2', EpSVB=EpSVB, EpnoSVB=EpnoSVB, Ep=Ep, Epsvbmask=Epsvbmask ) 
 
 # ### Kinetic energy
 # 
@@ -125,47 +125,47 @@ g = 9.81
 # where $\rho=\rho(x,y,z,t)=\rho_{anoma}(x,y,z,t)+\rho_{ref}(z)$ from model output, but for this barotropic run $\rho=\rho_0$
 # 
 
-# intialize arrays to save KE time series
-K = np.zeros_like(time[:end])
-K_svbmask = np.zeros_like(time[:end])
-KSVB = np.zeros_like(time[:end])
-KnoSVB = np.zeros_like(time[:end])
-# Expand grid variables with and without (nS) the bay to be 3D
-dA  = np.expand_dims(ds.rA.data,0) + np.zeros((nz,ny,nx))
-drF = np.expand_dims(np.expand_dims(ds.drF.data,1),1) + np.zeros((nz,ny,nx))
-vol = dA * drF * hFacCSVB
-dAnS  = np.expand_dims(ds2.rA.data,0) + np.zeros((nz,ny,nx))
-drFnS = np.expand_dims(np.expand_dims(ds2.drF.data,1),1) + np.zeros((nz,ny,nx))
-volnS = dAnS * drFnS * hFacC
-# Calculate KE at every time output (this is super slow but xarray is a pain along the time axis)
-for tt in range(len(time[:end])):
-    # Unstagger velocities into cell centers [everythng becomes size (nz-1,ny-1,nx-1)]
-    U,V = unstagger(ds.UVEL.data[tt,...],ds.VVEL.data[tt,...])
-    W   = unstagger_w(ds.WVEL.data[tt,...])
-    UnS,VnS = unstagger(ds2.UVEL.data[tt,...],ds2.VVEL.data[tt,...])
-    WnS     = unstagger_w(ds2.WVEL.data[tt,...])
-    # Apply land mask to velocities
-    UU = np.ma.masked_array(U[:-1,...], mask=maskSVB[:-1,:-1,:-1])
-    VV = np.ma.masked_array(V[:-1,...], mask=maskSVB[:-1,:-1,:-1])
-    WW = np.ma.masked_array(W[:,:-1,:-1], mask=maskSVB[:-1,:-1,:-1])
-    UUnS = np.ma.masked_array(UnS[:-1,...], mask=masknoSVB[:-1,:-1,:-1])
-    VVnS = np.ma.masked_array(VnS[:-1,...], mask=masknoSVB[:-1,:-1,:-1])
-    WWnS = np.ma.masked_array(WnS[:,:-1,:-1], mask=masknoSVB[:-1,:-1,:-1])
-    UUanom_SVBmask = np.ma.masked_array(U[:-1,...] - UnS[:-1,...], mask=maskSVB[:-1,:-1,:-1])
-    VVanom_SVBmask = np.ma.masked_array(V[:-1,...] - VnS[:-1,...], mask=maskSVB[:-1,:-1,:-1])
-    WWanom_SVBmask = np.ma.masked_array(W[:,:-1,:-1] - WnS[:,:-1,:-1], mask=maskSVB[:-1,:-1,:-1])
-    UUanom = np.ma.masked_array(U[:-1,...] - UnS[:-1,...], mask=masknoSVB[:-1,:-1,:-1])
-    VVanom = np.ma.masked_array(V[:-1,...] - VnS[:-1,...], mask=masknoSVB[:-1,:-1,:-1])
-    WWanom = np.ma.masked_array(W[:,:-1,:-1] - WnS[:,:-1,:-1], mask=masknoSVB[:-1,:-1,:-1])
-    ## Calculate KE
-    # with SVB and anomaly SVB-noSVB (should I use anomaly of density as well?)
-    KSVB[tt] = 0.5 * np.nansum(rho0 * (UU**2 + VV**2 + WW**2) * vol[:-1,:-1,:-1])
-    K[tt] = 0.5 * np.nansum(rho0 * (UUanom**2 + VVanom**2 + WWanom**2) * volnS[:-1,:-1,:-1])
-    K_svbmask[tt] = 0.5 * np.nansum(rho0 * 
-                                    (UUanom_SVBmask**2 + VVanom_SVBmask**2 + WWanom_SVBmask**2) *
-                                    vol[:-1,:-1,:-1])
-    # without SVB
-    KnoSVB[tt] = 0.5 * np.nansum(rho0 * (UUnS**2 + VVnS**2 + WWnS**2) * volnS[:-1,:-1,:-1])
+# # intialize arrays to save KE time series
+# K = np.zeros_like(time[:end])
+# K_svbmask = np.zeros_like(time[:end])
+# KSVB = np.zeros_like(time[:end])
+# KnoSVB = np.zeros_like(time[:end])
+# # Expand grid variables with and without (nS) the bay to be 3D
+# dA  = np.expand_dims(ds.rA.data,0) + np.zeros((nz,ny,nx))
+# drF = np.expand_dims(np.expand_dims(ds.drF.data,1),1) + np.zeros((nz,ny,nx))
+# vol = dA * drF * hFacCSVB
+# dAnS  = np.expand_dims(ds2.rA.data,0) + np.zeros((nz,ny,nx))
+# drFnS = np.expand_dims(np.expand_dims(ds2.drF.data,1),1) + np.zeros((nz,ny,nx))
+# volnS = dAnS * drFnS * hFacC
+# # Calculate KE at every time output (this is super slow but xarray is a pain along the time axis)
+# for tt in range(len(time[:end])):
+#     # Unstagger velocities into cell centers [everythng becomes size (nz-1,ny-1,nx-1)]
+#     U,V = unstagger(ds.UVEL.data[tt,...],ds.VVEL.data[tt,...])
+#     W   = unstagger_w(ds.WVEL.data[tt,...])
+#     UnS,VnS = unstagger(ds2.UVEL.data[tt,...],ds2.VVEL.data[tt,...])
+#     WnS     = unstagger_w(ds2.WVEL.data[tt,...])
+#     # Apply land mask to velocities
+#     UU = np.ma.masked_array(U[:-1,...], mask=maskSVB[:-1,:-1,:-1])
+#     VV = np.ma.masked_array(V[:-1,...], mask=maskSVB[:-1,:-1,:-1])
+#     WW = np.ma.masked_array(W[:,:-1,:-1], mask=maskSVB[:-1,:-1,:-1])
+#     UUnS = np.ma.masked_array(UnS[:-1,...], mask=masknoSVB[:-1,:-1,:-1])
+#     VVnS = np.ma.masked_array(VnS[:-1,...], mask=masknoSVB[:-1,:-1,:-1])
+#     WWnS = np.ma.masked_array(WnS[:,:-1,:-1], mask=masknoSVB[:-1,:-1,:-1])
+#     UUanom_SVBmask = np.ma.masked_array(U[:-1,...] - UnS[:-1,...], mask=maskSVB[:-1,:-1,:-1])
+#     VVanom_SVBmask = np.ma.masked_array(V[:-1,...] - VnS[:-1,...], mask=maskSVB[:-1,:-1,:-1])
+#     WWanom_SVBmask = np.ma.masked_array(W[:,:-1,:-1] - WnS[:,:-1,:-1], mask=maskSVB[:-1,:-1,:-1])
+#     UUanom = np.ma.masked_array(U[:-1,...] - UnS[:-1,...], mask=masknoSVB[:-1,:-1,:-1])
+#     VVanom = np.ma.masked_array(V[:-1,...] - VnS[:-1,...], mask=masknoSVB[:-1,:-1,:-1])
+#     WWanom = np.ma.masked_array(W[:,:-1,:-1] - WnS[:,:-1,:-1], mask=masknoSVB[:-1,:-1,:-1])
+#     ## Calculate KE
+#     # with SVB and anomaly SVB-noSVB (should I use anomaly of density as well?)
+#     KSVB[tt] = 0.5 * np.nansum(rho0 * (UU**2 + VV**2 + WW**2) * vol[:-1,:-1,:-1])
+#     K[tt] = 0.5 * np.nansum(rho0 * (UUanom**2 + VVanom**2 + WWanom**2) * volnS[:-1,:-1,:-1])
+#     K_svbmask[tt] = 0.5 * np.nansum(rho0 * 
+#                                     (UUanom_SVBmask**2 + VVanom_SVBmask**2 + WWanom_SVBmask**2) *
+#                                     vol[:-1,:-1,:-1])
+#     # without SVB
+#     KnoSVB[tt] = 0.5 * np.nansum(rho0 * (UUnS**2 + VVnS**2 + WWnS**2) * volnS[:-1,:-1,:-1])
 
-np.savez('KE_barotropic', KSVB=KSVB, KnoSVB=KnoSVB, K=K, K_svbmask=K_svbmask) 
+# np.savez('KE_barotropic', KSVB=KSVB, KnoSVB=KnoSVB, K=K, K_svbmask=K_svbmask) 
 

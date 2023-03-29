@@ -112,27 +112,27 @@ rho0 = np.nanmean(ds3.rhoRef.data)
 g = 9.81
 
 # # Initialize arrays to save EP time series
-# Ep = np.zeros_like(time[:end])
-# Epsvbmask = np.zeros_like(time[:end])
-# EpSVB = np.zeros_like(time[:end])
-# EpnoSVB = np.zeros_like(time[:end])
+Ep = np.zeros_like(time[:end])
+Epsvbmask = np.zeros_like(time[:end])
+EpSVB = np.zeros_like(time[:end])
+EpnoSVB = np.zeros_like(time[:end])
 
-# # grid variables
-# dA = ds.rA.data
-# dAnS = ds2.rA.data
+# grid variables
+dA = ds.rA.data
+dAnS = ds2.rA.data
 
-# for tt in range(len(time[:end])):
-#     ETASVB = np.ma.masked_array(ds.ETAN.data[tt,...], mask=maskSVB[0,...])
-#     ETAnoSVB = np.ma.masked_array(ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
-#     ETAanom = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
-#     ETAanom_svb = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=maskSVB[0,...])
+for tt in range(len(time[:end])):
+    ETASVB = np.ma.masked_array(ds.ETAN.data[tt,...], mask=maskSVB[0,...])
+    ETAnoSVB = np.ma.masked_array(ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
+    ETAanom = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=masknoSVB[0,...])
+    ETAanom_svb = np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=maskSVB[0,...])
    
-#     EpSVB[tt]     = 0.5 * rho0 * g * np.nansum(ETASVB**2 * dA)
-#     EpnoSVB[tt]   = 0.5 * rho0 * g * np.nansum(ETAnoSVB**2 * dAnS)
-#     Ep[tt]        = 0.5 * rho0 * g * np.nansum(ETAanom**2 * dAnS)
-#     Epsvbmask[tt] = 0.5 * rho0 * g * np.nansum(ETAanom_svb**2 * dA)
+    EpSVB[tt]     = 0.5 * rho0 * g * np.nansum(ETASVB * dA)
+    EpnoSVB[tt]   = 0.5 * rho0 * g * np.nansum(ETAnoSVB * dAnS)
+    Ep[tt]        = 0.5 * rho0 * g * np.nansum(ETAanom * dAnS)
+    Epsvbmask[tt] = 0.5 * rho0 * g * np.nansum(ETAanom_svb * dA)
 
-# np.savez('PE_febTS', EpSVB=EpSVB, EpnoSVB=EpnoSVB, Ep=Ep, Epsvbmask=Epsvbmask) 
+np.savez('PE_febTS2', EpSVB=EpSVB, EpnoSVB=EpnoSVB, Ep=Ep, Epsvbmask=Epsvbmask) 
 
 
 
@@ -145,40 +145,40 @@ g = 9.81
 # where $(\rho-\rho_0)=\rho_{Anoma}$ in MITgcm output.
 # 
 
-g = 9.81
-APE = np.zeros_like(time[:end])
-APEsvbmask = np.zeros_like(time[:end])
-APESVB = np.zeros_like(time[:end])
-APEnoSVB = np.zeros_like(time[:end])
-dA = np.expand_dims(ds.rA.data,0) + np.zeros((nz,ny,nx))
-drF =  np.expand_dims(np.expand_dims(ds.drF.data,1),1) + np.zeros((nz,ny,nx))
-Zexp = np.expand_dims(np.expand_dims(ds.Z.data,1),1) + np.zeros((nz,ny,nx))
-dAnS = np.expand_dims(ds2.rA.data,0) + np.zeros((nz,ny,nx))
+# g = 9.81
+# APE = np.zeros_like(time[:end])
+# APEsvbmask = np.zeros_like(time[:end])
+# APESVB = np.zeros_like(time[:end])
+# APEnoSVB = np.zeros_like(time[:end])
+# dA = np.expand_dims(ds.rA.data,0) + np.zeros((nz,ny,nx))
+# drF =  np.expand_dims(np.expand_dims(ds.drF.data,1),1) + np.zeros((nz,ny,nx))
+# Zexp = np.expand_dims(np.expand_dims(ds.Z.data,1),1) + np.zeros((nz,ny,nx))
+# dAnS = np.expand_dims(ds2.rA.data,0) + np.zeros((nz,ny,nx))
 
-for tt in range(len(time[:end])):
-    etan = np.expand_dims(np.ma.masked_array(ds.ETAN.data[tt,...], mask=maskSVB[0,...]),0) + np.zeros((nz,ny,nx))
-    rhoAnomSVB = np.ma.masked_array(ds3.RHOAnoma[tt,...].data, mask=maskSVB)
-    vol1 = dA * (drF+etan) * hFacCSVB 
+# for tt in range(len(time[:end])):
+#     etan = np.expand_dims(np.ma.masked_array(ds.ETAN.data[tt,...], mask=maskSVB[0,...]),0) + np.zeros((nz,ny,nx))
+#     rhoAnomSVB = np.ma.masked_array(ds3.RHOAnoma[tt,...].data, mask=maskSVB)
+#     vol1 = dA * (drF+etan) * hFacCSVB 
     
-    etan = np.expand_dims(np.ma.masked_array(ds2.ETAN.data[tt,...], mask=masknoSVB[0,...]),0) + np.zeros((nz,ny,nx))
-    rhoAnomnoSVB = np.ma.masked_array(ds4.RHOAnoma[tt,...].data, mask=masknoSVB)
-    vol2 = dAnS * (drF+etan) * hFacC 
+#     etan = np.expand_dims(np.ma.masked_array(ds2.ETAN.data[tt,...], mask=masknoSVB[0,...]),0) + np.zeros((nz,ny,nx))
+#     rhoAnomnoSVB = np.ma.masked_array(ds4.RHOAnoma[tt,...].data, mask=masknoSVB)
+#     vol2 = dAnS * (drF+etan) * hFacC 
    
-    etan = np.expand_dims(np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=masknoSVB[0,...]),0) + np.zeros((nz,ny,nx))
-    rhoAnomonlySVB = np.ma.masked_array(ds3.RHOAnoma[tt,...].data-ds4.RHOAnoma[tt,...].data, mask=masknoSVB)
-    vol3 = dAnS * (drF+etan) * hFacC 
+#     etan = np.expand_dims(np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=masknoSVB[0,...]),0) + np.zeros((nz,ny,nx))
+#     rhoAnomonlySVB = np.ma.masked_array(ds3.RHOAnoma[tt,...].data-ds4.RHOAnoma[tt,...].data, mask=masknoSVB)
+#     vol3 = dAnS * (drF+etan) * hFacC 
     
-    etan = np.expand_dims(np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=maskSVB[0,...]),0) + np.zeros((nz,ny,nx))
-    rhoAnomonlySVB_maskSVB = np.ma.masked_array(ds3.RHOAnoma[tt,...].data-ds4.RHOAnoma[tt,...].data, mask=maskSVB)
-    vol4 = dA * (drF+etan) * hFacCSVB  
+#     etan = np.expand_dims(np.ma.masked_array(ds.ETAN.data[tt,...]-ds2.ETAN.data[tt,...], mask=maskSVB[0,...]),0) + np.zeros((nz,ny,nx))
+#     rhoAnomonlySVB_maskSVB = np.ma.masked_array(ds3.RHOAnoma[tt,...].data-ds4.RHOAnoma[tt,...].data, mask=maskSVB)
+#     vol4 = dA * (drF+etan) * hFacCSVB  
    
    
-    APESVB[tt] = g*np.nansum(vol1*rhoAnomSVB*Zexp)
-    APEnoSVB[tt] = g*np.nansum(vol2*rhoAnomnoSVB*Zexp)
-    APE[tt] = g*np.nansum(vol3*rhoAnomonlySVB*Zexp)
-    APEsvbmask[tt] = g*np.nansum(vol4*rhoAnomonlySVB_maskSVB*Zexp)
+#     APESVB[tt] = g*np.nansum(vol1*rhoAnomSVB*Zexp)
+#     APEnoSVB[tt] = g*np.nansum(vol2*rhoAnomnoSVB*Zexp)
+#     APE[tt] = g*np.nansum(vol3*rhoAnomonlySVB*Zexp)
+#     APEsvbmask[tt] = g*np.nansum(vol4*rhoAnomonlySVB_maskSVB*Zexp)
    
-np.savez('APE_febTS', APESVB=APESVB, APEnoSVB=APEnoSVB, APE=APE, APEsvbmask=APEsvbmask) 
+# np.savez('APE_febTS', APESVB=APESVB, APEnoSVB=APEnoSVB, APE=APE, APEsvbmask=APEsvbmask) 
 
 
 
@@ -190,67 +190,67 @@ np.savez('APE_febTS', APESVB=APESVB, APEnoSVB=APEnoSVB, APE=APE, APEsvbmask=APEs
 #     
 
 
-# intialize arrays to save KE time series
-K = np.zeros_like(time[:end])
-K_svbmask = np.zeros_like(time[:end])
-KSVB = np.zeros_like(time[:end])
-KnoSVB = np.zeros_like(time[:end])
+# # intialize arrays to save KE time series
+# K = np.zeros_like(time[:end])
+# K_svbmask = np.zeros_like(time[:end])
+# KSVB = np.zeros_like(time[:end])
+# KnoSVB = np.zeros_like(time[:end])
 
-# Expand grid variables with and without (nS) the bay to be 3D
-dA  = np.expand_dims(ds.rA.data,0) + np.zeros((nz,ny,nx))
-drF = np.expand_dims(np.expand_dims(ds.drF.data,1),1) + np.zeros((nz,ny,nx))
-vol = dA * drF * hFacCSVB
+# # Expand grid variables with and without (nS) the bay to be 3D
+# dA  = np.expand_dims(ds.rA.data,0) + np.zeros((nz,ny,nx))
+# drF = np.expand_dims(np.expand_dims(ds.drF.data,1),1) + np.zeros((nz,ny,nx))
+# vol = dA * drF * hFacCSVB
 
-dAnS  = np.expand_dims(ds2.rA.data,0) + np.zeros((nz,ny,nx))
-drFnS = np.expand_dims(np.expand_dims(ds2.drF.data,1),1) + np.zeros((nz,ny,nx))
-volnS = dAnS * drFnS * hFacC
+# dAnS  = np.expand_dims(ds2.rA.data,0) + np.zeros((nz,ny,nx))
+# drFnS = np.expand_dims(np.expand_dims(ds2.drF.data,1),1) + np.zeros((nz,ny,nx))
+# volnS = dAnS * drFnS * hFacC
 
-# make the vertical profile rhoRef a 3D array
-rhoRef   = np.expand_dims(np.expand_dims(ds3.rhoRef.data,1),1) + np.zeros((nz,ny,nx))
-rhoRefnS = np.expand_dims(np.expand_dims(ds4.rhoRef.data,1),1) + np.zeros((nz,ny,nx))
+# # make the vertical profile rhoRef a 3D array
+# rhoRef   = np.expand_dims(np.expand_dims(ds3.rhoRef.data,1),1) + np.zeros((nz,ny,nx))
+# rhoRefnS = np.expand_dims(np.expand_dims(ds4.rhoRef.data,1),1) + np.zeros((nz,ny,nx))
 
-# Calculate KE at every time output (this is super slow but xarray is a pain along the time axis)
-for tt in range(len(time[:end])):
+# # Calculate KE at every time output (this is super slow but xarray is a pain along the time axis)
+# for tt in range(len(time[:end])):
     
-    # Unstagger velocities into cell centers [everythng becomes size (nz-1,ny-1,nx-1)]
-    U,V = unstagger(ds.UVEL.data[tt,...],ds.VVEL.data[tt,...])
-    W   = unstagger_w(ds.WVEL.data[tt,...])
+#     # Unstagger velocities into cell centers [everythng becomes size (nz-1,ny-1,nx-1)]
+#     U,V = unstagger(ds.UVEL.data[tt,...],ds.VVEL.data[tt,...])
+#     W   = unstagger_w(ds.WVEL.data[tt,...])
     
-    UnS,VnS = unstagger(ds2.UVEL.data[tt,...],ds2.VVEL.data[tt,...])
-    WnS     = unstagger_w(ds2.WVEL.data[tt,...])
+#     UnS,VnS = unstagger(ds2.UVEL.data[tt,...],ds2.VVEL.data[tt,...])
+#     WnS     = unstagger_w(ds2.WVEL.data[tt,...])
     
-    # Apply land mask to velocities
-    UU = np.ma.masked_array(U[:-1,...], mask=maskSVB[:-1,:-1,:-1])
-    VV = np.ma.masked_array(V[:-1,...], mask=maskSVB[:-1,:-1,:-1])
-    WW = np.ma.masked_array(W[:,:-1,:-1], mask=maskSVB[:-1,:-1,:-1])
+#     # Apply land mask to velocities
+#     UU = np.ma.masked_array(U[:-1,...], mask=maskSVB[:-1,:-1,:-1])
+#     VV = np.ma.masked_array(V[:-1,...], mask=maskSVB[:-1,:-1,:-1])
+#     WW = np.ma.masked_array(W[:,:-1,:-1], mask=maskSVB[:-1,:-1,:-1])
     
-    UUnS = np.ma.masked_array(UnS[:-1,...], mask=masknoSVB[:-1,:-1,:-1])
-    VVnS = np.ma.masked_array(VnS[:-1,...], mask=masknoSVB[:-1,:-1,:-1])
-    WWnS = np.ma.masked_array(WnS[:,:-1,:-1], mask=masknoSVB[:-1,:-1,:-1])
+#     UUnS = np.ma.masked_array(UnS[:-1,...], mask=masknoSVB[:-1,:-1,:-1])
+#     VVnS = np.ma.masked_array(VnS[:-1,...], mask=masknoSVB[:-1,:-1,:-1])
+#     WWnS = np.ma.masked_array(WnS[:,:-1,:-1], mask=masknoSVB[:-1,:-1,:-1])
     
-    UUanom_SVBmask = np.ma.masked_array(U[:-1,...] - UnS[:-1,...], mask=maskSVB[:-1,:-1,:-1])
-    VVanom_SVBmask = np.ma.masked_array(V[:-1,...] - VnS[:-1,...], mask=maskSVB[:-1,:-1,:-1])
-    WWanom_SVBmask = np.ma.masked_array(W[:,:-1,:-1] - WnS[:,:-1,:-1], mask=maskSVB[:-1,:-1,:-1])
+#     UUanom_SVBmask = np.ma.masked_array(U[:-1,...] - UnS[:-1,...], mask=maskSVB[:-1,:-1,:-1])
+#     VVanom_SVBmask = np.ma.masked_array(V[:-1,...] - VnS[:-1,...], mask=maskSVB[:-1,:-1,:-1])
+#     WWanom_SVBmask = np.ma.masked_array(W[:,:-1,:-1] - WnS[:,:-1,:-1], mask=maskSVB[:-1,:-1,:-1])
     
-    UUanom = np.ma.masked_array(U[:-1,...] - UnS[:-1,...], mask=masknoSVB[:-1,:-1,:-1])
-    VVanom = np.ma.masked_array(V[:-1,...] - VnS[:-1,...], mask=masknoSVB[:-1,:-1,:-1])
-    WWanom = np.ma.masked_array(W[:,:-1,:-1] - WnS[:,:-1,:-1], mask=masknoSVB[:-1,:-1,:-1])
+#     UUanom = np.ma.masked_array(U[:-1,...] - UnS[:-1,...], mask=masknoSVB[:-1,:-1,:-1])
+#     VVanom = np.ma.masked_array(V[:-1,...] - VnS[:-1,...], mask=masknoSVB[:-1,:-1,:-1])
+#     WWanom = np.ma.masked_array(W[:,:-1,:-1] - WnS[:,:-1,:-1], mask=masknoSVB[:-1,:-1,:-1])
     
-    ## Calculate KE
-    # with SVB and anomaly SVB-noSVB (should I use anomaly of density as well?)
-    rho = ds3.RHOAnoma[tt,:-1,:-1,:-1].data+rhoRef[:-1,:-1,:-1]
-    KSVB[tt] = 0.5 * np.nansum(rho * (UU**2 + VV**2 + WW**2) * vol[:-1,:-1,:-1])
+#     ## Calculate KE
+#     # with SVB and anomaly SVB-noSVB (should I use anomaly of density as well?)
+#     rho = ds3.RHOAnoma[tt,:-1,:-1,:-1].data+rhoRef[:-1,:-1,:-1]
+#     KSVB[tt] = 0.5 * np.nansum(rho * (UU**2 + VV**2 + WW**2) * vol[:-1,:-1,:-1])
     
-    K[tt] = 0.5 * np.nansum(rho * (UUanom**2 + VVanom**2 + WWanom**2) * volnS[:-1,:-1,:-1])
+#     K[tt] = 0.5 * np.nansum(rho * (UUanom**2 + VVanom**2 + WWanom**2) * volnS[:-1,:-1,:-1])
     
-    K_svbmask[tt] = 0.5 * np.nansum(rho * 
-                                    (UUanom_SVBmask**2 + VVanom_SVBmask**2 + WWanom_SVBmask**2) *
-                                    vol[:-1,:-1,:-1])
+#     K_svbmask[tt] = 0.5 * np.nansum(rho * 
+#                                     (UUanom_SVBmask**2 + VVanom_SVBmask**2 + WWanom_SVBmask**2) *
+#                                     vol[:-1,:-1,:-1])
     
-    # without SVB
-    rho = ds4.RHOAnoma[tt,:-1,:-1,:-1].data+rhoRefnS[:-1,:-1,:-1]
-    KnoSVB[tt] = 0.5 * np.nansum(rho * (UUnS**2 + VVnS**2 + WWnS**2) * volnS[:-1,:-1,:-1])
+#     # without SVB
+#     rho = ds4.RHOAnoma[tt,:-1,:-1,:-1].data+rhoRefnS[:-1,:-1,:-1]
+#     KnoSVB[tt] = 0.5 * np.nansum(rho * (UUnS**2 + VVnS**2 + WWnS**2) * volnS[:-1,:-1,:-1])
     
    
-np.savez('KE_febTS', KSVB=KSVB, KnoSVB=KnoSVB, K=K, K_svbmask=K_svbmask) 
+# np.savez('KE_febTS', KSVB=KSVB, KnoSVB=KnoSVB, K=K, K_svbmask=K_svbmask) 
 
